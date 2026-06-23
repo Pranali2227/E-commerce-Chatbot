@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraShop Return Helper & Image Scanner</title>
+    <!-- Simple standard font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Courier+Prime&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['"Courier Prime"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-100 text-gray-850 font-sans min-h-screen flex flex-col">
+
+    <!-- Fresh Simple Header -->
+    <header class="bg-blue-600 text-white shadow-md px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl">🛒</span>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">AuraShop Customer Support Portal</h1>
+                <p class="text-xs text-blue-200">Official Return &amp; Exchange Helper (With Auto Image Verification)</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <span class="text-xs bg-blue-700 px-2 py-1 rounded text-blue-100 font-semibold border border-blue-500">Student Project v1.2</span>
+            <!-- Reset Button -->
+            <button id="reset-chat-btn" class="bg-white hover:bg-gray-100 text-blue-600 text-xs font-semibold px-3.5 py-2 rounded shadow-sm border border-gray-200 transition-colors flex items-center gap-1.5">
+                🔄 Reset Chat
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 max-w-[1400px] w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+        
+        <!-- Left: Chat Panel (7 Cols) -->
+        <section class="lg:col-span-7 bg-white border border-gray-300 rounded-lg flex flex-col h-[calc(100vh-140px)] overflow-hidden shadow-sm">
+            <!-- Header bar for Chat -->
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🤖</span>
+                    <div>
+                        <h2 class="text-sm font-semibold text-gray-800">Support Chatbot</h2>
+                        <span class="inline-flex items-center text-[10px] text-green-600 font-semibold">
+                            <span class="h-1.5 w-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span> bot online
+                        </span>
+                    </div>
+                </div>
+                <div id="dialog-state-badge" class="text-[10px] font-mono bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100">
+                    State: Greeting
+                </div>
+            </div>
+
+            <!-- Chat Message Window -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-fresh">
+                <!-- Bot Welcome Message (injected dynamically) -->
+            </div>
+
+            <!-- Quick replies suggestion chips -->
+            <div id="quick-replies-container" class="px-4 py-2 flex flex-wrap gap-2 border-t border-gray-200/50 bg-gray-50/50">
+                <!-- Injected dynamically -->
+            </div>
+
+            <!-- Upload input block (displays when waiting for photo) -->
+            <div id="upload-overlay" class="hidden px-4 py-4 bg-yellow-50 border-t border-yellow-250 flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-yellow-800 flex items-center gap-1">
+                        📸 [UPLOAD PHOTO REQUIRED]
+                    </span>
+                    <button id="cancel-upload-btn" class="text-xs text-gray-500 hover:text-gray-700 underline">Dismiss</button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Standard File Input Dropzone -->
+                    <label id="dropzone" class="border-2 border-dashed border-gray-300 hover:border-blue-400 bg-white rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-gray-50 text-center">
+                        <input type="file" id="file-input" accept="image/*" class="hidden">
+                        <span class="text-2xl mb-1">📁</span>
+                        <p class="text-xs font-bold text-gray-700">Click to Select Photo</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">Drag &amp; drop works too!</p>
+                    </label>
+
+                    <!-- Sandbox Simulators -->
+                    <div class="flex flex-col justify-between border border-gray-200 bg-white p-3 rounded-lg gap-2 text-xs">
+                        <p class="font-semibold text-gray-600">Quick Testing Buttons (No file needed):</p>
+                        <button id="sim-defect-btn" class="w-full text-left px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded transition-colors flex items-center justify-between font-medium">
+                            <span>🔨 Sim Broken Item</span>
+                            <span class="text-[9px] bg-red-200 px-1 py-0.2 rounded">Defective</span>
+                        </button>
+                        <button id="sim-clean-btn" class="w-full text-left px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded transition-colors flex items-center justify-between font-medium">
+                            <span>✨ Sim Good Item</span>
+                            <span class="text-[9px] bg-green-200 px-1 py-0.2 rounded">Intact</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Form Input -->
+            <form id="chat-form" class="p-3 border-t border-gray-200 bg-gray-50 flex gap-2">
+                <input type="text" id="chat-input" placeholder="Type a message (e.g. 'Return policy' or '#12345')..." class="flex-1 bg-white border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 rounded px-3 py-2 text-sm text-gray-800 focus:outline-none transition-colors">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-5 py-2 rounded transition-colors shadow-sm">
+                    Send Message
+                </button>
+            </form>
+        </section>
+
+        <!-- Right: Vision CV Pipeline Panel (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col h-[calc(100vh-140px)] overflow-hidden gap-4">
+            
+            <!-- CV Console (ML Monitor Dashboard) -->
+            <div class="flex-1 bg-white border border-gray-300 rounded-lg p-4 flex flex-col gap-3.5 overflow-hidden shadow-sm">
+                <!-- Monitor Header -->
+                <div class="flex items-center justify-between pb-2 border-b border-gray-200">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xl">🔎</span>
+                        <h3 class="text-sm font-bold text-gray-700">Image Scanner Output</h3>
+                    </div>
+                    <span class="text-[10px] font-mono text-gray-400">System State: Active</span>
+                </div>
+
+                <!-- Empty State -->
+                <div id="cv-empty-state" class="flex-1 flex flex-col items-center justify-center text-center p-4 space-y-2">
+                    <span class="text-4xl text-gray-300">📷</span>
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase">Scanner Standby</h4>
+                        <p class="text-xs text-gray-400 mt-1 max-w-[280px]">When you upload a picture, the program will segment the image and test for structural defects.</p>
+                    </div>
+                </div>
+
+                <!-- Active Pipeline Display -->
+                <div id="cv-active-display" class="hidden flex-1 flex flex-col gap-3.5 overflow-y-auto scrollbar-fresh">
+                    
+                    <!-- Preprocessing Canvas & Image -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-gray-50 rounded border border-gray-200 p-2 flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-gray-500">1. Original Image</span>
+                            <div class="h-24 bg-gray-200 rounded overflow-hidden">
+                                <img id="cv-preview-img" src="" alt="Uploaded image" class="h-full w-full object-cover">
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded border border-gray-200 p-2 flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-gray-500">2. Resampled (112x112)</span>
+                            <div class="h-24 bg-gray-200 rounded overflow-hidden relative">
+                                <canvas id="cv-processed-canvas" width="224" height="224" class="h-full w-full object-contain filter saturate-50"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+                        <div class="bg-gray-50 border border-gray-250 rounded p-1.5">
+                            <span class="block text-[8px] text-gray-400 uppercase font-bold">Contrast</span>
+                            <span id="stat-contrast" class="text-xs font-bold text-gray-700">0.00</span>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-250 rounded p-1.5">
+                            <span class="block text-[8px] text-gray-400 uppercase font-bold">Edge Density</span>
+                            <span id="stat-edges" class="text-xs font-bold text-gray-700">0.00</span>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-250 rounded p-1.5">
+                            <span class="block text-[8px] text-gray-400 uppercase font-bold">Brightness</span>
+                            <span id="stat-brightness" class="text-xs font-bold text-gray-700">0.00</span>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-250 rounded p-1.5">
+                            <span class="block text-[8px] text-gray-400 uppercase font-bold">Tensor size</span>
+                            <span id="stat-tensor" class="text-[8px] font-bold text-blue-600 font-mono">[224,224,3]</span>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Verdict & Confidence Meter -->
+                    <div id="verdict-banner" class="rounded border p-3 flex flex-col gap-2 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-gray-700">Verdict Result</span>
+                            <span id="verdict-tag" class="text-[10px] font-bold px-2 py-0.5 rounded border">VERIFYING...</span>
+                        </div>
+                        
+                        <!-- Confidence Bar -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[10px] text-gray-500">
+                                <span>Defect Confidence:</span>
+                                <span id="confidence-percentage" class="font-bold">0%</span>
+                            </div>
+                            <div class="h-3 w-full bg-gray-200 rounded p-0.5 border border-gray-300 relative">
+                                <div id="confidence-fill" class="h-full rounded transition-all duration-1000 ease-out" style="width: 0%"></div>
+                                <!-- Threshold marker at 65% -->
+                                <div class="absolute top-0 bottom-0 left-[65%] w-0.5 bg-red-400" title="Defect Threshold (65%)"></div>
+                            </div>
+                            <div class="flex justify-between text-[8px] text-gray-400 font-mono">
+                                <span>0%</span>
+                                <span>Threshold: 65%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+
+                        <p id="verdict-desc" class="text-xs text-gray-600 leading-relaxed mt-0.5">Calculating pixel weights...</p>
+                    </div>
+
+                    <!-- Debug logs terminal -->
+                    <div class="bg-gray-900 rounded p-3 flex-1 flex flex-col h-32 overflow-hidden font-mono text-[9px] text-green-400">
+                        <div class="flex items-center justify-between pb-1 border-b border-gray-800 text-gray-500 font-bold uppercase">
+                            <span>System Logs (Python Output)</span>
+                            <span>● active</span>
+                        </div>
+                        <div id="pipeline-logs" class="flex-1 overflow-y-auto space-y-0.5 py-1.5 scrollbar-fresh">
+                            <!-- Logs injected dynamically -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <!-- Guide Panel -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex flex-col gap-1 shadow-sm text-xs">
+                <h4 class="font-bold text-blue-800 flex items-center gap-1">
+                    ℹ️ Testing Instructions
+                </h4>
+                <p class="text-blue-700 leading-relaxed">
+                    Click <strong>File Return / Exchange</strong> in the chat to prompt the photo upload. You can click <strong>Sim Broken Item</strong> to test the defect verification flow or <strong>Sim Good Item</strong> to test the fallback clean item flow.
+                </p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Simple Footer -->
+    <footer class="py-2.5 text-center text-xs text-gray-500 border-t border-gray-200 bg-gray-50">
+        AuraShop Support App &copy; 2026. Made with HTML, CSS (Tailwind) and Python FastAPI.
+    </footer>
+
+    <!-- JS Core Script -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
