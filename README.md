@@ -21,7 +21,7 @@ A Full-Stack prototype of a modern Customer Support Chatbot integrated with a cu
    .\run.ps1
    ```
 2. Open your web browser and navigate to:
-   👉 **http://127.0.0.1:8000**
+   👉 **https://e-commerce-chatbot-nfrt.onrender.com**
 
 ---
 
